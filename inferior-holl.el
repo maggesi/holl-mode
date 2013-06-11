@@ -44,15 +44,22 @@
 (defvar inferior-holl-mode-map
   (let ((m (make-sparse-keymap)))
     (define-key m "\C-c\C-r" 'holl-send-region)
-    (define-key m "\C-c\C-p" 'holl-send-print)
+    (define-key m "\C-c\C-e" 'holl-send-phrase)
+    (define-key m "\C-c\C-g" 'holl-send-goal)
+    (define-key m "\C-c\C-t" 'holl-send-tactic)
     (define-key m "\C-c\C-b" 'holl-send-backup)
+    (define-key m "\C-c\C-p" 'holl-send-print)
     m))
 
 ;; Install the process communication commands in the holl-mode keymap.
 (define-key holl-mode-map [(meta return)] 'holl-send-phrase)
-(define-key holl-mode-map "\C-c\C-r" 'holl-send-region)
 (define-key holl-mode-map "\C-c\C-i" 'holl-display-inferior)
+(define-key holl-mode-map "\C-c\C-r" 'holl-send-region)
+(define-key holl-mode-map "\C-c\C-e" 'holl-send-phrase)
+(define-key holl-mode-map "\C-c\C-g" 'holl-send-goal)
+(define-key holl-mode-map "\C-c\C-t" 'holl-send-tactic)
 (define-key holl-mode-map "\C-c\C-b" 'holl-send-backup)
+(define-key holl-mode-map "\C-c\C-p" 'holl-send-print)
 
 (defvar holl-buffer nil "*The current holl process buffer.")
 
@@ -170,9 +177,38 @@ select the buffer"
   (comint-send-region (holl-proc) start end)
   (holl-display-inferior nil))
 
+(defun holl-send-line ()
+  "Send the current line to the inferior HOL-Light process."
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (let ((start (point)))
+      (end-of-line)
+      (holl-send-region start (point))
+      (holl-send-string "\n"))))
+
+(defun holl-send-tactic ()
+  (interactive)
+  (save-excursion
+    (backward-paragraph)
+    (let ((start (point)))
+      (forward-paragraph)
+      (holl-send-string "e (")
+      (holl-send-region start (point))
+      (holl-send-string ");;\n"))))
+
 (defun holl-send-string (string)
   "Send a string to the inferior HOL-Light process."
   (comint-send-string (holl-proc) string))
+
+(defun holl-send-goal ()
+  "Send region as goal to HOL."
+  (interactive)
+  (holl-mark-term)
+  (save-excursion
+    (holl-send-string "g ")
+    (holl-send-region (point) (mark))
+    (holl-send-string ";;\n")))
 
 (defun holl-send-phrase ()
   "Send phrase at point to the HOL-Light process."

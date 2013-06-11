@@ -82,12 +82,10 @@
 (defvar holl-mode-map
   (let ((km (make-sparse-keymap)))
     (define-key km [(meta return)] 'holl-send-phrase)
-    ;(define-key km [(control return)] 'holl-send-line-tac)
     (define-key km [(control return)] 'holl-send-phrase)
     (define-key km [(meta up)] 'holl-phrase-backward)
     (define-key km [(meta down)] 'holl-phrase-forward)
-    (define-key km "\C-c\C-r" 'holl-send-region)
-    (define-key km "\C-c\C-p" 'holl-send-print)
+    (define-key km "\C-c\C-m" 'holl-mark-term)
     km)
   "Keymap used in HOL-Light mode.")
 
@@ -123,8 +121,7 @@
   (set (make-local-variable 'comment-column) 40)
   (set (make-local-variable 'comment-start-skip) "(\\*+ *")
   (set (make-local-variable 'parse-sexp-ignore-comments) nil)
-  (set (make-local-variable 'indent-line-function) 'holl-indent-line)
-)
+  (set (make-local-variable 'indent-line-function) 'holl-indent-line))
 
 (defun holl-mode ()
   "Major mode for editing HOL-Light code.
@@ -144,6 +141,18 @@ indentation level.
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults '(holl-font-lock-keywords))
   (run-hooks 'holl-mode-hook))
+
+(defun holl-mark-term ()
+  "Select the a HOL term."
+  (interactive)
+  (let ((end
+	 (save-excursion
+	   (skip-chars-forward "^`")
+	   (forward-char)
+	   (point))))
+    (skip-chars-backward "^`")
+    (backward-char)
+    (push-mark end nil t)))
 
 (defun holl-search-double-semicolon-forward (&optional arg)
   "Search forward the N-th double semicolon \";;\" in a HOL-Light script.
