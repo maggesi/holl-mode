@@ -68,14 +68,14 @@
     (modify-syntax-entry ?\\ "\\  " st)
     (modify-syntax-entry ?\| ".  " st)
     (modify-syntax-entry ?_  "_  " st)
-    (modify-syntax-entry ?`  "$  " st)
+    (modify-syntax-entry ?`  "|  " st)
     st)
   "Syntax table for `holl-mode'.")
 
 (defvar holl-font-lock-keywords
   (list (cons (regexp-opt
 	       '("and" "else" "end" "if" "in" "let" "rec" "match"
-		 "then" "val" "with") 'words)
+		 "then" "val" "with") 'symbols)
 	      'font-lock-keyword-face))
   "Keyword highlighting specification for `holl-mode'.")
 
