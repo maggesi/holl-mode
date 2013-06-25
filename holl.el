@@ -1,4 +1,4 @@
-;;; inferior-holl.el --- Run an inferior HOL-Light process.
+;;; holl.el --- Edit HOL Light proof scripts.
 ;;; Version: 2006-09
 ;;; Copyright (C) Marco Maggesi (http://www.math.unifi.it/~maggesi/)
 ;;; Compatibility: Emacs21
@@ -61,8 +61,8 @@
     (modify-syntax-entry ?\$ ".   " st)
     (modify-syntax-entry ?\& ".   " st)
     (modify-syntax-entry ?\' "w   " st)
-    (modify-syntax-entry ?\( "()1n" st)
-    (modify-syntax-entry ?\) ")(4n" st)
+    (modify-syntax-entry ?\( "()1" st)
+    (modify-syntax-entry ?\) ")(4" st)
     (modify-syntax-entry ?\* ". 23n" st)
     (modify-syntax-entry ?\/ ".  " st)
     (modify-syntax-entry ?\\ "\\  " st)
@@ -71,6 +71,15 @@
     (modify-syntax-entry ?`  "|  " st)
     st)
   "Syntax table for `holl-mode'.")
+
+(defun holl-syntax-propertize (start end) 
+  (interactive "r")
+  (goto-char start) 
+  (funcall 
+   (syntax-propertize-rules 
+    ("(\\(\\*\\))"
+     (1 ".   "))) 
+    start end))
 
 (defvar holl-font-lock-keywords
   (list (cons (regexp-opt
@@ -111,17 +120,14 @@
 
 (defun holl-mode-variables ()
   (set-syntax-table holl-mode-syntax-table)
-  (set (make-local-variable 'paragraph-start)
-       (concat "^$\\|" page-delimiter))
-  (set (make-local-variable 'paragraph-separate) paragraph-start)
   (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
-  (set (make-local-variable 'require-final-newline) t)
   (set (make-local-variable 'comment-start) "(* ")
   (set (make-local-variable 'comment-end) " *)")
   (set (make-local-variable 'comment-column) 40)
   (set (make-local-variable 'comment-start-skip) "(\\*+ *")
-  (set (make-local-variable 'parse-sexp-ignore-comments) nil)
-  (set (make-local-variable 'indent-line-function) 'holl-indent-line))
+  (set (make-local-variable 'indent-line-function) 'holl-indent-line)
+  (set (make-local-variable 'syntax-propertize-function) 'holl-syntax-propertize)
+  (setq font-lock-defaults '(holl-font-lock-keywords)))
 
 (defun holl-mode ()
   "Major mode for editing HOL-Light code.
@@ -138,8 +144,6 @@ indentation level.
   (setq mode-name "holl")
   (use-local-map holl-mode-map)
   (holl-mode-variables)
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '(holl-font-lock-keywords))
   (run-hooks 'holl-mode-hook))
 
 (defun holl-mark-term ()

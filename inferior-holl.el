@@ -36,7 +36,7 @@
   :type 'hook
   :group 'holl)
 
-(defcustom holl-program-name "hol"
+(defcustom holl-program-name "hol_light"
   "*How HOL-Light is invoked."
   :type 'string
   :group 'holl)
@@ -189,13 +189,13 @@ select the buffer"
 
 (defun holl-send-tactic ()
   (interactive)
-  (save-excursion
-    (backward-paragraph)
-    (let ((start (point)))
-      (forward-paragraph)
-      (holl-send-string "e (")
-      (holl-send-region start (point))
-      (holl-send-string ");;\n"))))
+  (backward-paragraph)
+  (let ((start (point)))
+    (re-search-forward "[ \t]*\\(THENL?\\)?[ \t]*\\(\\'\\|\n[ \t]*$\\)" nil t)
+    (goto-char (match-beginning 0))
+    (holl-send-string "e (")
+    (holl-send-region start (point))
+    (holl-send-string ");;\n")))
 
 (defun holl-send-string (string)
   "Send a string to the inferior HOL-Light process."
