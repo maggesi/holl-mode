@@ -47,6 +47,7 @@
     (define-key m "\C-c\C-e" 'holl-send-phrase)
     (define-key m "\C-c\C-g" 'holl-send-goal)
     (define-key m "\C-c\C-t" 'holl-send-tactic)
+    (define-key m "\C-c\C-l" 'holl-send-tactic-line)
     (define-key m "\C-c\C-b" 'holl-send-backup)
     (define-key m "\C-c\C-p" 'holl-send-print)
     m))
@@ -58,6 +59,7 @@
 (define-key holl-mode-map "\C-c\C-e" 'holl-send-phrase)
 (define-key holl-mode-map "\C-c\C-g" 'holl-send-goal)
 (define-key holl-mode-map "\C-c\C-t" 'holl-send-tactic)
+(define-key holl-mode-map "\C-c\C-l" 'holl-send-tactic-line)
 (define-key holl-mode-map "\C-c\C-b" 'holl-send-backup)
 (define-key holl-mode-map "\C-c\C-p" 'holl-send-print)
 
@@ -196,6 +198,19 @@ select the buffer"
     (holl-send-string "e (")
     (holl-send-region start (point))
     (holl-send-string ");;\n")))
+
+(defun holl-send-tactic-line ()
+  "Send current line as a tactic."
+  (interactive)
+  (back-to-indentation)
+  (let ((start (point)))
+    (re-search-forward "[ \t]*\\(THENL?\\)?[ \t]*$"
+		       (line-end-position) t)
+    (holl-send-string "e (")
+    (holl-send-region start (match-beginning 0))
+    (holl-send-string ");;\n")
+    (forward-line)
+    ))
 
 (defun holl-send-string (string)
   "Send a string to the inferior HOL-Light process."
