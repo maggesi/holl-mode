@@ -200,8 +200,22 @@ select the buffer"
     (holl-send-string ");;\n")))
 
 (defun holl-send-tactic-line ()
-  "Send current line as a tactic.  Skips initial open brackets
-`['and trailing `THEN' and `THENL'"
+  "Send current line as a tactic."
+  (interactive)
+  (back-to-indentation)
+  ;;(skip-chars-forward "\[")
+  (let ((start (point)))
+    (move-end-of-line 1)
+    (skip-chars-backward " \t;[")
+    ;; (holl-send-string "e (")
+    ;; (holl-send-region start (match-beginning 0))
+    ;; (holl-send-string ");;\n")
+    ;; (forward-line)
+    ))
+
+(defun holl-send-tactic-line ()
+  "Send current line as a tactic.   Skips initial open brackets
+ [ and trailing THEN and THENL."
   (interactive)
   (back-to-indentation)
   (skip-chars-forward "[")
