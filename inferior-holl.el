@@ -36,7 +36,7 @@
   :type 'hook
   :group 'holl)
 
-(defcustom holl-program-name "hol_light"
+(defcustom holl-program-name "./runhol"
   "*How HOL-Light is invoked."
   :type 'string
   :group 'holl)
@@ -235,8 +235,8 @@ select the buffer"
 (defun holl-send-goal ()
   "Send region as goal to HOL."
   (interactive)
-  (holl-mark-term)
   (save-excursion
+    (holl-mark-term)
     (holl-send-string "g ")
     (holl-send-region (point) (mark))
     (holl-send-string ";;\n")))
