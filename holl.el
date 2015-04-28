@@ -142,6 +142,7 @@ indentation level.
   (kill-all-local-variables)
   (setq major-mode 'holl-mode)
   (setq mode-name "holl")
+  (electric-indent-local-mode -1)
   (use-local-map holl-mode-map)
   (holl-mode-variables)
   (run-hooks 'holl-mode-hook))
