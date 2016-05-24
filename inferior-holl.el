@@ -1,7 +1,7 @@
 ;;; inferior-holl.el --- Run an inferior HOL-Light process.
 ;;; Version: 2006-09
 ;;; Copyright (C) Marco Maggesi (http://www.math.unifi.it/~maggesi/)
-;;; Compatibility: Emacs21
+;;; Compatibility: Emacs24
 
 ;; LICENCE:
 ;;
@@ -36,7 +36,7 @@
   :type 'hook
   :group 'holl)
 
-(defcustom holl-program-name "./runhol"
+(defcustom holl-program-name "hol_light"
   "*How HOL-Light is invoked."
   :type 'string
   :group 'holl)
@@ -81,12 +81,19 @@ The following commands are available:
 \\{inferior-holl-mode-map}
 "
   ;; Customise in inferior-holl-mode-hook
-  (electric-indent-local-mode -1)
+  ;; (electric-indent-local-mode -1)
   (setq comint-prompt-regexp "^# ?")
   (holl-mode-variables)
   (setq mode-line-process '(":%s"))
-  (set (make-local-variable 'font-lock-defaults) '(holl-font-lock-keywords))
+  (setq font-lock-defaults `(,holl-font-lock-keywords))
+  (add-hook (make-local-variable 'comint-preoutput-filter-functions)
+	    'holl-inferior-sanitize-output)
   )
+
+(defun holl-inferior-sanitize-output (str)
+  (replace-regexp-in-string "^maybe you forgot a `;'$"
+			    "maybe you forgot a ;"
+			    str))
 
 (defun holl-args-to-list (string)
   (let ((where (string-match "[ \t]" string)))
@@ -94,7 +101,7 @@ The following commands are available:
 	  ((not (= where 0))
 	   (cons (substring string 0 where)
 		 (holl-args-to-list (substring string (+ 1 where)
-						 (length string)))))
+					       (length string)))))
 	  (t (let ((pos (string-match "[^ \t]" string)))
 	       (if (null pos)
 		   nil
@@ -192,27 +199,18 @@ select the buffer"
 
 (defun holl-send-tactic ()
   (interactive)
-  (backward-paragraph)
-  (let ((start (point)))
-    (re-search-forward "[ \t]*\\(THENL?\\)?[ \t]*\\(\\'\\|\n[ \t]*$\\)" nil t)
-    (goto-char (match-beginning 0))
-    (holl-send-string "e (")
-    (holl-send-region start (point))
-    (holl-send-string ");;\n")))
-
-(defun holl-send-tactic-line ()
-  "Send current line as a tactic."
-  (interactive)
-  (back-to-indentation)
-  ;;(skip-chars-forward "\[")
-  (let ((start (point)))
-    (move-end-of-line 1)
-    (skip-chars-backward " \t;[")
-    ;; (holl-send-string "e (")
-    ;; (holl-send-region start (match-beginning 0))
-    ;; (holl-send-string ");;\n")
-    ;; (forward-line)
-    ))
+  (save-excursion
+    (re-search-backward "\\`\\|^[[:space:]]*?\\(\n[[:space:]]*\\)")
+    (goto-char (match-end 0))
+    (re-search-forward
+     (concat "\\(\\(?:.*\n\\)*?\\(?:.*?\\)\\)"
+	     "[[:space:]]*\\(:?THENL?\\)?"
+	     "[[:space:]]*\\[?[[:space:]]*"
+	     "\\(\\'\\|\n\\(\\'\\|[[:space:]]*?$\\)\\)"))
+    (holl-send-string "e(")
+    (holl-send-string (match-string 1))
+    (holl-send-string ");;\n"))
+  (goto-char (match-end 0)))
 
 (defun holl-send-tactic-line ()
   "Send current line as a tactic.   Skips initial open brackets
@@ -233,14 +231,40 @@ select the buffer"
   "Send a string to the inferior HOL-Light process."
   (comint-send-string (holl-proc) string))
 
-(defun holl-send-goal ()
-  "Send region as goal to HOL."
+(defun holl-send-tactic ()
   (interactive)
   (save-excursion
-    (holl-mark-term)
-    (holl-send-string "g ")
-    (holl-send-region (point) (mark))
-    (holl-send-string ";;\n")))
+    (re-search-backward "\\`\\|^[[:space:]]*?\\(\n[[:space:]]*\\)")
+    (goto-char (match-end 0))
+    (re-search-forward
+     (concat "\\(\\(?:.*\n\\)*?"
+	     "\\(?:.*?\\)\\)"
+	     "[[:space:]]*\\(:?THENL?\\)?"
+	     "[[:space:]]*?\\[?[[:space:]]*?"
+	     "\n[[:space:]]*?$"))
+    (holl-send-string "e(")
+    (holl-send-string (match-string 1))
+    (holl-send-string ");;\n"))
+  (goto-char (match-end 1)))
+
+(defun holl-send-goal ()
+  "\
+Send the quoted term around point as a new goal to HOL.  Move
+point at the end of the term (after the quote) and return the
+position.  Raise an error if the point is not inside a quoted
+term.
+"
+  (interactive)
+  (let ((end
+	 (save-excursion
+	   (when (holl-mark-term)
+	     (holl-send-string "g ")
+	     (holl-send-region (point) (mark))
+	     (holl-send-string ";;\n")
+	     (mark)))))
+    (if end
+	(goto-char end)
+      (error "Not inside a quoted HOL term"))))
 
 (defun holl-send-phrase ()
   "Send phrase at point to the HOL-Light process."

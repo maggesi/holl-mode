@@ -138,7 +138,3 @@ let SORTED = prove
 
 let LIST_TRANSPOSE_IDEMP = prove;;
 g `!l. SORTED (>=) (MAP LENGTH l) ==> LIST_TRANSPOSE (LIST_TRANSPOSE l) = l`;;
-
-GEN_TAC THENL [
-
-
