@@ -81,7 +81,9 @@ The following commands are available:
 \\{inferior-holl-mode-map}
 "
   ;; Customise in inferior-holl-mode-hook
-  (electric-indent-local-mode -1)
+
+  (when (fboundp 'electric-indent-local-mode)
+    (electric-indent-local-mode -1))
   (setq comint-prompt-regexp "^# ?")
   (holl-mode-variables)
   (setq mode-line-process '(":%s"))
